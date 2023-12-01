@@ -24,17 +24,25 @@ fn solve(input: &str, str_digits: &[&str]) -> usize {
     input
         .lines()
         .map(|line| {
+            // for each line
+            // find the first digit
             let first = str_digits
                 .iter()
+                // enumerate all possible str_digits
                 .enumerate()
+                // find the position of all possible str_digits from left
                 .filter_map(|(i, p)| line.find(p).map(|start| (i, start)))
+                // take the str_digit with the lowest index returned by find
                 .min_by_key(|v| v.1)
                 .map(|(i, _)| str_digits[i])
                 .unwrap();
             let last = str_digits
                 .iter()
+                // enumerate all possible str_digits
                 .enumerate()
+                // find the position of all possible str_digits from right
                 .filter_map(|(i, p)| line.rfind(p).map(|start| (i, start)))
+                // take the str_digit with the highest index returned by rfind
                 .max_by_key(|v| v.1)
                 .map(|(i, _)| str_digits[i])
                 .unwrap();
