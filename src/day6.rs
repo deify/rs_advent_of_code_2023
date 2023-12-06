@@ -53,16 +53,8 @@ pub fn parse(input: &str) -> Vec<Race> {
         .collect()
 }
 
-#[aoc(day6, part1)]
-pub fn part1(input: &[Race]) -> usize {
-    input
-        .iter()
-        .map(|race| race.winning_init_speeds().count())
-        .product()
-}
-
-#[aoc(day6, part2)]
-pub fn part2(input: &str) -> usize {
+#[aoc_generator(day6, part2)]
+pub fn parse2(input: &str) -> Race {
     let mut lines_iter = input.lines();
     let time = lines_iter
         .next()
@@ -88,10 +80,22 @@ pub fn part2(input: &str) -> usize {
         .map(|s| s.parse().unwrap())
         .unwrap();
 
-    let race = Race {
+    Race {
         time,
         record_distance,
-    };
+    }
+}
+
+#[aoc(day6, part1)]
+pub fn part1(input: &[Race]) -> usize {
+    input
+        .iter()
+        .map(|race| race.winning_init_speeds().count())
+        .product()
+}
+
+#[aoc(day6, part2)]
+pub fn part2(race: &Race) -> usize {
     race.winning_init_speeds().count()
 }
 
@@ -128,6 +132,6 @@ Distance:  9  40  200";
 
     #[test]
     fn test_part2() {
-        assert_eq!(71503, part2(TEST_INPUT));
+        assert_eq!(71503, part2(&parse2(TEST_INPUT)));
     }
 }
