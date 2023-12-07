@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap},
+    collections::{BTreeMap, BinaryHeap},
     str::FromStr,
 };
 
@@ -11,7 +11,7 @@ pub enum ParseError {
     InvalidHandWithBet,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Card {
     Ass = 14,
     King = 13,
@@ -79,7 +79,7 @@ impl FromStr for Hand {
 
 impl Hand {
     fn get_type(&self) -> Type {
-        let map = self.0.iter().fold(HashMap::new(), |mut map, card| {
+        let map = self.0.iter().fold(BTreeMap::new(), |mut map, card| {
             *map.entry(card).or_insert(0usize) += 1;
             map
         });
@@ -169,20 +169,24 @@ pub fn parse(input: &str) -> Vec<HandWithBid> {
 pub fn part1(input: &[HandWithBid]) -> usize {
     let len = input.len();
 
-    // TODO: could be an iterator with nightly
-    let sorted = input.iter().collect::<BinaryHeap<_>>().into_sorted_vec();
+    let mut heap = input.iter().collect::<BinaryHeap<_>>();
 
-    sorted.iter().enumerate().fold(0, |acc, (i, h)| {
-        let rank = i + 1;
-        println!(
-            "{}: {:?} -> {:?} bid: {}",
-            rank,
-            h.hand.get_type(),
-            h.hand,
-            h.bid
-        );
-        acc + h.bid * rank
-    })
+    // TODO: could be an iterator with nightly
+    let mut sum = 0;
+    let mut count = 0;
+    while let Some(h) = heap.pop() {
+        let rank = len - count;
+        count += 1;
+        // println!(
+        //     "{}: {:?} -> {:?} bid: {}",
+        //     rank,
+        //     h.hand.get_type(),
+        //     h.hand,
+        //     h.bid
+        // );
+        sum += h.bid * rank;
+    }
+    sum
 }
 
 #[aoc(day7, part2)]
