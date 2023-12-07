@@ -1,5 +1,3 @@
-use std::str::Lines;
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct Race {
     time: usize,
