@@ -169,11 +169,11 @@ pub fn parse(input: &str) -> Vec<HandWithBid> {
 pub fn part1(input: &[HandWithBid]) -> usize {
     let len = input.len();
 
-    let mut sorted = input.iter().collect::<BinaryHeap<_>>().into_sorted_vec();
-    sorted.reverse();
+    // TODO: could be an iterator with nightly
+    let sorted = input.iter().collect::<BinaryHeap<_>>().into_sorted_vec();
 
     sorted.iter().enumerate().fold(0, |acc, (i, h)| {
-        let rank = len - i;
+        let rank = i + 1;
         println!(
             "{}: {:?} -> {:?} bid: {}",
             rank,
