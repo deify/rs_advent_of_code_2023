@@ -16,7 +16,7 @@ impl NodeMap {
         let lr_iter = Box::new(self.lr.chars().cycle());
         NodeMapIter {
             n: self,
-            start_node: node,
+            current_node: node,
             lr_iter,
         }
     }
@@ -24,20 +24,20 @@ impl NodeMap {
 
 pub struct NodeMapIter<'a> {
     n: &'a NodeMap,
-    start_node: &'a str,
+    current_node: &'a str,
     lr_iter: Box<dyn Iterator<Item = char> + 'a>,
 }
 
 impl<'a> Iterator for NodeMapIter<'a> {
     type Item = &'a str;
     fn next(&mut self) -> Option<Self::Item> {
-        let choices = self.n.node_map.get(self.start_node)?;
+        let choices = self.n.node_map.get(self.current_node)?;
         let dest_node = match self.lr_iter.next()? {
             'L' => &choices.0,
             'R' => &choices.1,
             _ => panic!(),
         };
-        self.start_node = dest_node;
+        self.current_node = dest_node;
         Some(dest_node)
     }
 }
