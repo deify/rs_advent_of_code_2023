@@ -2,6 +2,7 @@ use std::{collections::BTreeMap, str::FromStr};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct NodeMap {
+    //TODO: these members need to be owned instead of &str because of an aoc framework limitation
     lr: String,
     node_map: BTreeMap<String, (String, String)>,
 }
@@ -61,13 +62,14 @@ impl FromStr for NodeMap {
         let node_map = line_iter
             .skip(1)
             .map(|l| {
-                let (key, values) = l.split_once('=').unwrap(); //TODO
-                let (a, b) = values.trim().split_once(',').unwrap();
-                let a = a.strip_prefix('(').map(|s| s.trim()).unwrap();
-                let b = b.strip_suffix(')').map(|s| s.trim()).unwrap();
-                (key.trim().to_string(), (a.to_string(), b.to_string()))
+                let (key, values) = l.split_once('=')?;
+                let (a, b) = values.trim().split_once(',')?;
+                let a = a.strip_prefix('(').map(|s| s.trim())?;
+                let b = b.strip_suffix(')').map(|s| s.trim())?;
+                Some((key.trim().to_string(), (a.to_string(), b.to_string())))
             })
-            .collect();
+            .collect::<Option<BTreeMap<_, _>>>()
+            .ok_or(ParseErr::InvalidNodeMap)?;
 
         Ok(NodeMap { lr, node_map })
     }
