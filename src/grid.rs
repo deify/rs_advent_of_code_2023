@@ -1,14 +1,14 @@
 use core::fmt;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Position {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl Position {
-    pub fn distance(&self, other: &Self) -> usize {
+    pub fn manhattan_distance(&self, other: &Self) -> usize {
         self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
 }
@@ -21,6 +21,15 @@ pub struct Grid<T> {
 impl<T> Grid<T> {
     pub fn new(data: Vec<T>, columns: usize) -> Self {
         Grid { data, columns }
+    }
+
+    pub fn is_position_valid(&self, pos: &Position) -> bool {
+        if pos.x >= self.columns {
+            return false;
+        }
+        let offset = self.columns * pos.y + pos.x;
+
+        offset <= self.data.len()
     }
 
     pub fn at(&self, pos: &Position) -> Option<&T> {
@@ -145,6 +154,28 @@ impl<T> Grid<T> {
         (0..self.columns).map(|c| self.iter_col(c).collect())
     }
 
+    pub fn drop_row(&mut self, row_index: usize) {
+        let row_start = row_index * self.columns;
+        let row_end = row_start + self.columns;
+
+        (row_start..row_end).rev().for_each(|i| {
+            self.data.remove(i);
+        });
+    }
+
+    pub fn drop_column(&mut self, col_index: usize) {
+        if col_index >= self.columns {
+            panic!("Out of bound column index");
+        }
+        (col_index..self.data.len())
+            .step_by(self.columns)
+            .rev()
+            .for_each(|i| {
+                self.data.remove(i);
+            });
+        self.columns -= 1;
+    }
+
     // pub fn iter_rows_mut(&mut self) -> impl Iterator<Item = impl Iterator<Item = &mut T>> {
     //     (0..self.rows()).map(|r| self.iter_row_mut(r))
     // }
@@ -154,12 +185,20 @@ impl<T> Grid<T> {
     // }
 }
 
+impl<T: Clone> Grid<T> {
+    pub fn insert_col_with(&mut self, col_index: usize, value: &T) {
+        self.insert_col(col_index, vec![value.clone(); self.rows()]);
+    }
+    pub fn insert_row_with(&mut self, row_index: usize, value: &T) {
+        self.insert_row(row_index, vec![value.clone(); self.columns]);
+    }
+}
 impl<T: Default + Clone> Grid<T> {
     pub fn insert_col_default(&mut self, col_index: usize) {
-        self.insert_col(col_index, vec![T::default(); self.rows()]);
+        self.insert_col_with(col_index, &T::default())
     }
     pub fn insert_row_default(&mut self, row_index: usize) {
-        self.insert_row(row_index, vec![T::default(); self.columns]);
+        self.insert_row_with(row_index, &T::default())
     }
 }
 
@@ -271,5 +310,23 @@ mod tests {
             .enumerate()
             .find(|(i, v)| v.iter().all(|e| e == &&'0'));
         assert_eq!(f.unwrap().0, 1);
+    }
+
+    #[test]
+    fn test_drop_row() {
+        let mut grid: Grid<char> = Grid::from_str("123\n456\n789\n").unwrap();
+        grid.drop_row(1);
+        assert_eq!(grid.to_string(), "123\n789\n");
+        assert_eq!(grid.rows(), 2);
+        assert_eq!(grid.columns, 3);
+    }
+
+    #[test]
+    fn test_drop_column() {
+        let mut grid: Grid<char> = Grid::from_str("123\n456\n789\n").unwrap();
+        grid.drop_column(1);
+        assert_eq!(grid.to_string(), "13\n46\n79\n");
+        assert_eq!(grid.rows(), 3);
+        assert_eq!(grid.columns, 2);
     }
 }
