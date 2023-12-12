@@ -37,7 +37,7 @@ impl<T> Grid<T> {
             return None;
         }
         let offset = self.columns * pos.y + pos.x;
-        if offset > self.data.len() {
+        if offset >= self.data.len() {
             None
         } else {
             Some(&self.data[offset])
