@@ -48,6 +48,10 @@ impl<T> Grid<T> {
         self.data.iter()
     }
 
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.data.iter_mut()
+    }
+
     pub fn find<P>(&self, predicate: P) -> Option<&T>
     where
         P: FnMut(&&T) -> bool,
@@ -60,11 +64,11 @@ impl<T> Grid<T> {
         Position { x, y }
     }
 
-    pub fn find_pos<P>(&self, mut predicate: P) -> Option<Position>
+    pub fn find_pos<P>(&self, predicate: P) -> Option<Position>
     where
         P: FnMut(&T) -> bool,
     {
-        let i = self.data.iter().position(|x| predicate(x))?;
+        let i = self.data.iter().position(predicate)?;
         Some(self.index_to_position(i))
     }
 
@@ -328,5 +332,32 @@ mod tests {
         assert_eq!(grid.to_string(), "13\n46\n79\n");
         assert_eq!(grid.rows(), 3);
         assert_eq!(grid.columns, 2);
+    }
+
+    #[test]
+    fn test_mut_find() {
+        let mut grid: Grid<char> = Grid::from_str("123\n456\n789\n").unwrap();
+
+        grid.iter_mut().find(|e| e == &&'5').map(|e| *e = 'X');
+        assert_eq!(grid.to_string(), "123\n4X6\n789\n");
+    }
+
+    #[test]
+    fn test_mut_find_map() {
+        let mut grid: Grid<char> = Grid::from_str("123\n456\n789\n").unwrap();
+
+        let test = grid
+            .iter_mut()
+            .find_map(|e| {
+                (e == &'5').then(|| {
+                    *e = 'X';
+                    e
+                })
+            })
+            .unwrap();
+        assert_eq!(test, &'X');
+
+        *test = 'Y';
+        assert_eq!(grid.to_string(), "123\n4Y6\n789\n");
     }
 }
