@@ -60,7 +60,7 @@ impl Position {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default, Hash)]
 pub struct Grid<T> {
     data: Vec<T>,
     pub columns: usize,
