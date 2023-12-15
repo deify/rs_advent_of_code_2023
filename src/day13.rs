@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 
 use itertools::Itertools;
 
@@ -43,42 +43,70 @@ pub fn parse(input: &str) -> Vec<Grid<GroundType>> {
     ret
 }
 
+#[derive(Debug)]
 pub enum MirrorDirection {
     Vertical,
     Horizontal,
 }
 
-fn check_mirror<T: PartialEq>(grid: &Grid<T>, mirror_index: usize, dir: MirrorDirection) -> bool {
-    let mirror_line = mirror_index + 1;
-    match dir {
-        MirrorDirection::Horizontal => {
-            let max_mirror_space = mirror_line.min(grid.rows() - mirror_line);
-            if max_mirror_space == 0 {
-                return false;
-            }
-
-            (0..max_mirror_space).all(|offset| {
-                let r1 = grid.iter_row(mirror_index - offset);
-                let r2 = grid.iter_row(mirror_index + 1 + offset);
-                r1.eq(r2)
-            })
-        }
-        MirrorDirection::Vertical => {
-            let max_mirror_space = mirror_line.min(grid.columns - mirror_line);
-            if max_mirror_space == 0 {
-                return false;
-            }
-
-            (0..max_mirror_space).all(|offset| {
-                let r1 = grid.iter_col(mirror_index - offset);
-                let r2 = grid.iter_col(mirror_index + 1 + offset);
-                r1.eq(r2)
-            })
+#[derive(Debug)]
+pub struct MirrorLineIter<'a, T> {
+    grid: &'a Grid<T>,
+    mirror_line: usize,
+    offset: usize,
+    dir: MirrorDirection,
+}
+impl<'a, T> MirrorLineIter<'a, T> {
+    fn new(grid: &'a Grid<T>, mirror_line: usize, dir: MirrorDirection) -> Self {
+        Self {
+            grid,
+            mirror_line,
+            offset: 0,
+            dir,
         }
     }
 }
 
-fn calc_reflection_count<T: PartialEq>(grid: &Grid<T>) -> usize {
+impl<'a, T> Iterator for MirrorLineIter<'a, T> {
+    type Item = (Vec<&'a T>, Vec<&'a T>);
+    fn next(&mut self) -> Option<Self::Item> {
+        let lower_index = self.mirror_line.checked_sub(self.offset)?;
+        let upper_index = self.mirror_line + 1 + self.offset;
+        self.offset += 1;
+
+        match self.dir {
+            MirrorDirection::Horizontal => {
+                if upper_index >= self.grid.rows() {
+                    return None;
+                }
+                Some((
+                    self.grid.iter_row(lower_index).collect_vec(),
+                    self.grid.iter_row(upper_index).collect_vec(),
+                ))
+            }
+            MirrorDirection::Vertical => {
+                if upper_index >= self.grid.columns {
+                    return None;
+                }
+                Some((
+                    self.grid.iter_col(lower_index).collect_vec(),
+                    self.grid.iter_col(upper_index).collect_vec(),
+                ))
+            }
+        }
+    }
+}
+
+fn check_mirror<T: PartialEq + Debug>(
+    grid: &Grid<T>,
+    mirror_line: usize,
+    dir: MirrorDirection,
+) -> bool {
+    let mut mirror_iter = MirrorLineIter::new(grid, mirror_line, dir);
+    mirror_iter.all(|(a, b)| dbg!(a == b))
+}
+
+fn calc_reflection_count<T: PartialEq + Debug>(grid: &Grid<T>) -> usize {
     if let Some(horizontal_mirror) =
         (0..grid.rows()).find(|i| check_mirror(grid, *i, MirrorDirection::Horizontal))
     {
