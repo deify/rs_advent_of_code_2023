@@ -1,6 +1,24 @@
 use core::fmt;
 use std::str::FromStr;
 
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum Direction {
+    North = 0,
+    West,
+    South,
+    East,
+}
+impl Direction {
+    pub fn invert(&self) -> Direction {
+        match self {
+            Direction::North => Direction::South,
+            Direction::East => Direction::West,
+            Direction::South => Direction::North,
+            Direction::West => Direction::East,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Position {
     pub x: usize,
@@ -11,9 +29,38 @@ impl Position {
     pub fn manhattan_distance(&self, other: &Self) -> usize {
         self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
+
+    pub fn move_dir(&mut self, dir: Direction) -> bool {
+        match dir {
+            Direction::North => {
+                if let Some(y) = self.y.checked_sub(1) {
+                    self.y = y;
+                    true
+                } else {
+                    false
+                }
+            }
+            Direction::East => {
+                self.x += 1;
+                true
+            }
+            Direction::South => {
+                self.y += 1;
+                true
+            }
+            Direction::West => {
+                if let Some(x) = self.x.checked_sub(1) {
+                    self.x = x;
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+    }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct Grid<T> {
     data: Vec<T>,
     pub columns: usize,
@@ -41,6 +88,17 @@ impl<T> Grid<T> {
             None
         } else {
             Some(&self.data[offset])
+        }
+    }
+    pub fn at_mut(&mut self, pos: &Position) -> Option<&mut T> {
+        if pos.x >= self.columns {
+            return None;
+        }
+        let offset = self.columns * pos.y + pos.x;
+        if offset >= self.data.len() {
+            None
+        } else {
+            Some(&mut self.data[offset])
         }
     }
 
