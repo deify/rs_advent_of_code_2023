@@ -94,13 +94,15 @@ pub fn parse2(input: &str) -> Vec<Position> {
         })
         .collect_vec();
 
-    let min_pos = positions.iter().min().unwrap().clone();
+    let min_pos = positions.iter().fold((0, 0), |(min_x, min_y), pos| {
+        (min_x.min(pos.x), min_y.min(pos.y))
+    });
 
     positions
         .iter()
         .map(|p| Position {
-            x: (p.x - min_pos.x) as usize,
-            y: (p.y - min_pos.y) as usize,
+            x: (p.x - min_pos.0) as usize,
+            y: (p.y - min_pos.1) as usize,
         })
         .collect()
 }
@@ -223,13 +225,13 @@ fn fill_trench(grid: &mut Grid<Terrain>) {
 pub fn part1(input: &[DigEntry]) -> usize {
     let mut grid = dig_trench(input);
 
-    println!("path:");
-    println!("{}", grid);
+    // println!("path:");
+    // println!("{}", grid);
 
     fill_trench(&mut grid);
 
-    println!("filled");
-    println!("{}", grid);
+    // println!("filled");
+    // println!("{}", grid);
 
     grid.iter()
         .filter(|e| matches!(e, Terrain::Trench(_)))
@@ -238,22 +240,22 @@ pub fn part1(input: &[DigEntry]) -> usize {
 
 #[aoc(day18, part2)]
 pub fn part2(input: &[Position]) -> usize {
-    let len = input.len();
-    input
+    let area = input
         .iter()
-        .cycle()
-        .tuple_windows()
-        .take(len)
+        .circular_tuple_windows()
         .map(|(a, b)| {
-            dbg!((a, b));
             let x_diff = a.x as isize - b.x as isize;
-            match x_diff.cmp(&0) {
-                Ordering::Less => (x_diff - 1) * (a.y as isize),
-                Ordering::Greater => (x_diff + 1) * (a.y as isize + 1),
-                _ => 0,
-            }
+            x_diff * a.y as isize
         })
-        .sum::<isize>() as usize
+        .sum::<isize>() as usize;
+    let edges = input
+        .iter()
+        .circular_tuple_windows()
+        .map(|(a, b)| a.manhattan_distance(b))
+        .sum::<usize>()
+        / 2;
+
+    area + edges + 1
 }
 
 #[cfg(test)]
@@ -286,7 +288,13 @@ U 2 (#7a21e3)";
         let positions = parse2(TEST_INPUT);
 
         let min = positions.iter().min().unwrap();
-        assert_eq!(min, &Position { x: 1, y: 1 });
+        assert_eq!(min, &Position { x: 0, y: 0 });
+    }
+
+    #[test]
+    fn test_parse2_data() {
+        let positions = parse2(include_str!("../input/2023/day18.txt"));
+        println!("{:?}", positions);
     }
 
     #[test]
@@ -310,6 +318,11 @@ U 2 (#7a21e3)";
             Position { x: 4, y: 4 },
             Position { x: 1, y: 4 },
         ];
+        // ####
+        // ####
+        // ####
+        // ####
+        //
         assert_eq!(16, part2(&positions))
     }
     #[test]
@@ -317,16 +330,17 @@ U 2 (#7a21e3)";
         let positions = [
             Position { x: 0, y: 0 },
             Position { x: 1, y: 0 },
-            Position { x: 1, y: 1 },
             Position { x: 1, y: 2 },
-            Position { x: 2, y: 2 },
             Position { x: 3, y: 2 },
-            Position { x: 3, y: 1 },
             Position { x: 3, y: 0 },
             Position { x: 4, y: 0 },
             Position { x: 4, y: 3 },
             Position { x: 0, y: 3 },
         ];
+        //#####
+        //#####
+        //## ##
+        //## ##
         assert_eq!(18, part2(&positions))
     }
 
