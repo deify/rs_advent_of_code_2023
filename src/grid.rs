@@ -19,7 +19,7 @@ impl Direction {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, PartialOrd, Ord)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -30,32 +30,18 @@ impl Position {
         self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
 
-    pub fn move_dir(&mut self, dir: Direction) -> bool {
+    pub fn move_dir(&self, dir: &Direction) -> Option<Position> {
         match dir {
-            Direction::North => {
-                if let Some(y) = self.y.checked_sub(1) {
-                    self.y = y;
-                    true
-                } else {
-                    false
-                }
-            }
-            Direction::East => {
-                self.x += 1;
-                true
-            }
-            Direction::South => {
-                self.y += 1;
-                true
-            }
-            Direction::West => {
-                if let Some(x) = self.x.checked_sub(1) {
-                    self.x = x;
-                    true
-                } else {
-                    false
-                }
-            }
+            Direction::North => self.y.checked_sub(1).map(|y| Position { x: self.x, y }),
+            Direction::East => Some(Position {
+                x: self.x + 1,
+                y: self.y,
+            }),
+            Direction::South => Some(Position {
+                x: self.x,
+                y: self.y + 1,
+            }),
+            Direction::West => self.x.checked_sub(1).map(|x| Position { x, y: self.y }),
         }
     }
 }

@@ -110,7 +110,12 @@ pub struct LightBeam {
 }
 impl LightBeam {
     fn move_beam(&mut self) -> bool {
-        self.position.move_dir(self.direction)
+        if let Some(p) = self.position.move_dir(&self.direction) {
+            self.position = p;
+            true
+        } else {
+            false
+        }
     }
 }
 

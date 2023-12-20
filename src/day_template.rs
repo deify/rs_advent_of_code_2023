@@ -30,7 +30,17 @@ mod tests {
     }
 
     #[test]
+    fn solve_part1() {
+        assert_eq!(1, part1(&parse(include_str!("../input/2023/day1.txt"))));
+    }
+
+    #[test]
     fn test_part2() {
         assert_eq!(1, part2(&parse(TEST_INPUT)));
+    }
+
+    #[test]
+    fn solve_part2() {
+        assert_eq!(1, part2(&parse(include_str!("../input/2023/day1.txt"))));
     }
 }
